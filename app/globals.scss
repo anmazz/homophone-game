@@ -1,0 +1,15 @@
+@use 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
+
+
+input, button {
+  border: 1px solid black;
+  border-radius: .5rem;
+}
+
+h1 {
+  font-family: "Michroma", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
