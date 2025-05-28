@@ -2,14 +2,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
 
-
-input, button {
-  border: 1px solid black;
+@mixin padding {
   border-radius: .5rem;
+  padding: 0.5rem .75rem;
 }
 
-h1 {
+button {
+  border: 1px solid rgb(94, 94, 94);
+  @include padding;
+}
+
+input {
+  @include padding;
+  width: 20rem;
+}
+
+
+h1, h2 {
   font-family: "Michroma", sans-serif;
-  font-weight: 400;
+  font-weight: 800;
   font-style: normal;
+}
+
+.material-symbols-outlined { 
+  font-size: 40px;
+}
+
+#header {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 3rem 3rem 0 3rem;
+  color: white;
+  background: #322a9b;
+  background: radial-gradient(circle,rgba(50, 42, 155, 1) 0%, rgba(83, 196, 237, 1) 100%);
+}
+
+#word-list {
+  width: 18rem;
+  padding-left: 2.5rem;
+}
+
+@mixin animation-up-and-fade {
+  animation: 1s anim-lineUp forwards;
+  animation-iteration-count: 1;
+}
+
+.correct-guess {
+  @include animation-up-and-fade();
+  color: green;
+}
+
+.game-over {
+  animation: 1s nofade forwards;
+  animation-iteration-count: 1;
+  color: red;
+}
+
+@keyframes anim-lineUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0%);
+  }
+}
+
+@keyframes nofade {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0%);
+  }
 }
