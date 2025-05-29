@@ -1,9 +1,14 @@
 'use client'
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import React from "react";
+import Modal from 'react-modal';
 import homophones from "../public/homophoneslist.json";
 import Header from './header';
+import Instructions from "./instructions";
+import GuessFeedback from "./guessFeedback";
 
+Modal.setAppElement('#appElement');
 
 export default function Home() {
 
@@ -15,7 +20,32 @@ export default function Home() {
   const [currentGuess, setCurrentGuess] = useState<string | undefined>(undefined);
   const [hiScore, setHiScore] = useState<number>();
   const [gameOver, setGameOver] = useState<boolean>(false);
+  const [clickedButton, setClickedButton] = useState<boolean>(false);
 
+  const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);
+
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    backgroundColor: 'black',
+    color: 'white'
+    },
+  };
+
+  function openPopup() {
+    setGameOverModalOpen(true);
+  }
+
+  function closePopup() {
+    setGameOverModalOpen(false);
+  }
 
   useEffect(() => {
     if (hiScore !== undefined) { // don't set if hiScore hasn't been retrieved from localstorage yet
@@ -29,17 +59,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (fileName) {
+    // prevent first autoplay of audio if button hasn't been pushed yet
+    if (fileName && clickedButton) { 
       playAudio();
     }
   }, [fileName]);
 
   function playAudio() {
+    console.log(fileName);
+    if (!clickedButton) {
+      setClickedButton(true);
+    }
     setAudioPlaying(true);
     const audio = new Audio(fileName);
 
     audio.addEventListener('ended', () => {
       setAudioPlaying(false);
+      inputRef?.current?.focus();
     });
 
     audio.play();
@@ -55,7 +91,6 @@ export default function Home() {
     setFileName("/" + chosenGroup?.join("_") + ".mp3");
     const chosen = chosenGroup?.at(Math.floor(Math.random() * chosenGroup.length));
     return chosen; // chose random word in group
-
   }
 
   function handleSubmit(e: any) {
@@ -84,15 +119,27 @@ export default function Home() {
       setCurrentWord(generateRandomWord());
     } else {
       // game over
-      setCorrectWords([]);
-      setGameOver(true);
+      endGame();
     }
   }
 
+  function endGame() {
+    setGameOver(true);
+    setTimeout(() => {
+      openPopup();
+    }, 700)
+  }
+
   function replay() {
+    closePopup();
+    setCorrectWords([]);
     setGameOver(false);
     setCurrentWord(generateRandomWord());
     setCurrentGuess(undefined);
+  }
+
+  function score() {
+    return correctWords.length;
   }
 
   function guessCorrect(guess: string) {
@@ -100,20 +147,18 @@ export default function Home() {
   }
 
   return (
-    <div className="flex justify-center items-center flex-col">
+    <div id="appElement" className="flex justify-center items-center flex-col">
 
       <Header/>
     
       <div className="pt-30">
-        { currentWord }
-        <h2>CURRENT STREAK: {correctWords.length}</h2>
+        {/* { currentWord } */}
+        
+        <Instructions buttonClicked={clickedButton}/>
 
-        { currentGuess && !gameOver && (<div className="correct-guess" key={currentGuess}>
-          +1 { currentGuess }
-        </div>)}
-        { gameOver && (<div className="game-over" key={currentGuess}>
-          X correct word was: { currentWord }
-        </div>)}
+        <h2>SCORE: {correctWords.length}</h2>
+
+        <GuessFeedback currentGuess={currentGuess} currentWord={currentWord} gameOver={gameOver}/>
 
         <div className="flex gap-x-1">
           <button className="flex items-center" onClick={playAudio} >
@@ -121,25 +166,35 @@ export default function Home() {
           </button>
         
           <form action="post" onSubmit={handleSubmit} className="flex gap-x-1">
-            <input name="guess" className="border caret-black" autoFocus/>
+            <input name="guess" ref={inputRef} className="border caret-black" autoFocus/>
             <button type="submit" className="submit">submit</button>
           </form>
         </div>
 
-        { gameOver && (
-        <button onClick={replay}>Replay</button>
-        )}
-        
         <div id="word-list">
           <ol className="list-decimal">
-            {
-              correctWords.map(correctWord => (
+            { correctWords.map(correctWord => (
                 <li key={correctWord}>{ correctWord }</li>
               ))
             }
           </ol>
         </div>
       </div>
+
+      <Modal
+        isOpen={gameOverModalOpen}
+        onRequestClose={closePopup}
+        style={customStyles}
+        contentLabel="Game over modal">
+        <h2>GAME OVER!</h2>
+        <div className="flex flex-col gap-y-4">
+          <div>
+            <p>score: { score() }</p>
+            <p>high score: { hiScore }</p>
+          </div>
+          <button className="submit" onClick={replay}>replay</button>
+        </div>
+      </Modal>
 
       <div className="fixed left-0 bottom-0 w-full flex justify-center text-2xl pb-8">
         high score: {hiScore}

@@ -7,13 +7,21 @@
   padding: 0.5rem .75rem;
 }
 
+body {
+  background-color: black;
+  color: white;
+}
+
 button {
-  border: 1px solid rgb(94, 94, 94);
-  @include padding;
+  &.submit {
+    border: 2px solid rgb(234, 234, 234);
+    @include padding;
+  }
 }
 
 input {
   @include padding;
+  border: 2px solid rgb(234, 234, 234);
   width: 20rem;
 }
 
@@ -26,6 +34,10 @@ h1, h2 {
 
 .material-symbols-outlined { 
   font-size: 40px;
+
+  &.small {
+    font-size: 20px;
+  }
 }
 
 #header {
@@ -43,20 +55,16 @@ h1, h2 {
   padding-left: 2.5rem;
 }
 
-@mixin animation-up-and-fade {
+.correct-guess {
   animation: 1s anim-lineUp forwards;
   animation-iteration-count: 1;
-}
-
-.correct-guess {
-  @include animation-up-and-fade();
   color: green;
 }
 
 .game-over {
   animation: 1s nofade forwards;
   animation-iteration-count: 1;
-  color: red;
+  color: rgb(255, 120, 120);
 }
 
 @keyframes anim-lineUp {
