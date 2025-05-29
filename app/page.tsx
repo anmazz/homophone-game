@@ -152,8 +152,6 @@ export default function Home() {
       <Header/>
     
       <div className="pt-30">
-        {/* { currentWord } */}
-        
         <Instructions buttonClicked={clickedButton}/>
 
         <h2>SCORE: {correctWords.length}</h2>

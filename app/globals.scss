@@ -2,9 +2,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Michroma&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined');
 
-@mixin padding {
+@mixin padding-border {
   border-radius: .5rem;
   padding: 0.5rem .75rem;
+  border: 2px solid rgb(234, 234, 234);
 }
 
 body {
@@ -14,14 +15,12 @@ body {
 
 button {
   &.submit {
-    border: 2px solid rgb(234, 234, 234);
-    @include padding;
+    @include padding-border;
   }
 }
 
 input {
-  @include padding;
-  border: 2px solid rgb(234, 234, 234);
+  @include padding-border;
   width: 20rem;
 }
 
@@ -52,7 +51,8 @@ h1, h2 {
 
 #word-list {
   width: 18rem;
-  padding-left: 2.5rem;
+  padding-left: 4rem;
+  padding-top: 1rem;
 }
 
 .correct-guess {
