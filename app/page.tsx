@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import React from "react";
 import Modal from 'react-modal';
 import homophones from "../public/homophoneslist.json";
@@ -13,7 +13,7 @@ Modal.setAppElement('#appElement');
 export default function Home() {
 
   const [correctWords, setCorrectWords] = useState<string[]>([]);
-  const [unseen, setUnseen] = useState<Set<number>>(new Set(Array.from({ length: homophones.length }, (_, i) => i + 1)));
+  
   const [currentWord, setCurrentWord] = useState<string | undefined>("");
   const [fileName, setFileName] = useState<string | undefined>("");
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
@@ -25,6 +25,9 @@ export default function Home() {
   const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const unseenWordList = useRef<Set<number>>(new Set(
+    Array.from({ length: homophones.length }, (_, i) => i + 1)
+  ));
 
   const customStyles = {
   content: {
@@ -58,15 +61,7 @@ export default function Home() {
     setHiScore(parseInt(localStorage.getItem('hiScore') ?? "0") || 0);
   }, []);
 
-  useEffect(() => {
-    // prevent first autoplay of audio if button hasn't been pushed yet
-    if (fileName && clickedButton) { 
-      playAudio();
-    }
-  }, [fileName]);
-
-  function playAudio() {
-    console.log(fileName);
+  const playAudio = useCallback(() => {
     if (!clickedButton) {
       setClickedButton(true);
     }
@@ -79,13 +74,20 @@ export default function Home() {
     });
 
     audio.play();
-  }
+  }, [fileName, clickedButton]);
+
+  useEffect(() => {
+    // prevent first autoplay of audio if button hasn't been pushed yet
+    if (fileName && clickedButton) { 
+      playAudio();
+    }
+  }, [fileName, clickedButton, playAudio]);
 
   function generateRandomWord(): string | undefined {
-    const chosenWordIndex = Array.from(unseen)[Math.floor(Math.random() * unseen.size)];
-    const newUnseen = new Set(unseen);
-    newUnseen.delete(chosenWordIndex);
-    setUnseen(newUnseen);
+    const indices = Array.from(unseenWordList.current);
+    const chosenWordIndex = indices[Math.floor(Math.random() * indices.length)];
+    
+    unseenWordList.current.delete(chosenWordIndex);
 
     const chosenGroup = homophones.at(chosenWordIndex); // choose homophone group
     setFileName("/" + chosenGroup?.join("_") + ".mp3");
@@ -93,16 +95,16 @@ export default function Home() {
     return chosen; // chose random word in group
   }
 
-  function handleSubmit(e: any) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     // Prevent the browser from reloading the page
     e.preventDefault();
 
     // Read the form data
-    const form = e.target;
+    const form = e.currentTarget;
     const formData = new FormData(form);
     const formJson = Object.fromEntries(formData.entries());
     const guess = formJson["guess"].toString();
-    e.target.reset();
+    form.reset();
 
     if (guess === "") {
       // prevent user from entering nothing
@@ -136,6 +138,7 @@ export default function Home() {
     setGameOver(false);
     setCurrentWord(generateRandomWord());
     setCurrentGuess(undefined);
+    unseenWordList.current = new Set(Array.from({ length: homophones.length }, (_, i) => i + 1));
   }
 
   function score() {
