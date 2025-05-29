@@ -6,7 +6,9 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "next": "15.3.2",
@@ -23,6 +25,7 @@
     "@types/react-modal": "^3.16.3",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "gh-pages": "^6.3.0",
     "sass": "^1.89.0",
     "tailwindcss": "^4",
     "typescript": "^5"
