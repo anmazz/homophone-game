@@ -62,6 +62,10 @@ export default function Home() {
   }, []);
 
   const playAudio = useCallback(() => {
+    if (audioPlaying) return;
+
+    console.debug(fileName);
+
     if (!clickedButton) {
       setClickedButton(true);
     }
@@ -115,8 +119,8 @@ export default function Home() {
 
     if (guessCorrect(guess)) {
       setCorrectWords([...correctWords, guess]);
-      if (correctWords.length + 1 > (hiScore ?? 0)) {
-        setHiScore(correctWords.length + 1);
+      if (score() + 1 > (hiScore ?? 0)) {
+        setHiScore(score() + 1);
       }
       setCurrentWord(generateRandomWord());
     } else {
@@ -154,7 +158,7 @@ export default function Home() {
 
       <Header/>
     
-      <div className="pt-30">
+      <div className="pt-24">
         <Instructions buttonClicked={clickedButton}/>
 
         <h2>SCORE: {correctWords.length}</h2>
@@ -167,7 +171,7 @@ export default function Home() {
           </button>
         
           <form action="post" onSubmit={handleSubmit} className="flex gap-x-1">
-            <input name="guess" ref={inputRef} className="border caret-black" autoFocus/>
+            <input name="guess" ref={inputRef} autoFocus/>
             <button type="submit" className="submit">submit</button>
           </form>
         </div>
