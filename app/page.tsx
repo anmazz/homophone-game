@@ -21,13 +21,13 @@ export default function Home() {
   const [hiScore, setHiScore] = useState<number>();
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [clickedButton, setClickedButton] = useState<boolean>(false);
-
   const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const unseenWordList = useRef<Set<number>>(new Set(
     Array.from({ length: homophones.length }, (_, i) => i + 1)
   ));
+  const clickedButtonRef = useRef<boolean>(false);
 
   const customStyles = {
   content: {
@@ -62,11 +62,8 @@ export default function Home() {
   }, []);
 
   const playAudio = useCallback(() => {
-    if (audioPlaying) return;
-
-    console.debug(fileName);
-
-    if (!clickedButton) {
+    if (!clickedButtonRef.current) {
+      clickedButtonRef.current = true;
       setClickedButton(true);
     }
     setAudioPlaying(true);
@@ -78,14 +75,14 @@ export default function Home() {
     });
 
     audio.play();
-  }, [fileName, clickedButton]);
+  }, [fileName, clickedButtonRef]);
 
   useEffect(() => {
     // prevent first autoplay of audio if button hasn't been pushed yet
-    if (fileName && clickedButton) { 
+    if (fileName && clickedButtonRef.current) { 
       playAudio();
     }
-  }, [fileName, clickedButton, playAudio]);
+  }, [fileName, clickedButtonRef, playAudio]);
 
   function generateRandomWord(): string | undefined {
     const indices = Array.from(unseenWordList.current);
