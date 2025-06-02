@@ -8,17 +8,15 @@ import Header from './header';
 import Instructions from "./instructions";
 import GuessFeedback from "./guessFeedback";
 
-Modal.setAppElement('#appElement');
-
 export default function Home() {
 
   const [correctWords, setCorrectWords] = useState<string[]>([]);
-  
   const [currentWord, setCurrentWord] = useState<string | undefined>("");
-  const [fileName, setFileName] = useState<string | undefined>("");
-  const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [currentGuess, setCurrentGuess] = useState<string | undefined>(undefined);
+  const [fileName, setFileName] = useState<string | undefined>("");
   const [hiScore, setHiScore] = useState<number>();
+
+  const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [gameOver, setGameOver] = useState<boolean>(false);
   const [clickedButton, setClickedButton] = useState<boolean>(false);
   const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);
@@ -62,6 +60,7 @@ export default function Home() {
   }, []);
 
   const playAudio = useCallback(() => {
+    console.debug(fileName);
     if (!clickedButtonRef.current) {
       clickedButtonRef.current = true;
       setClickedButton(true);
@@ -184,6 +183,7 @@ export default function Home() {
       </div>
 
       <Modal
+        ariaHideApp={false}
         isOpen={gameOverModalOpen}
         onRequestClose={closePopup}
         style={customStyles}
