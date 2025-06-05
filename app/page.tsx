@@ -1,30 +1,58 @@
 'use client'
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useReducer, useRef, useState } from "react";
 import React from "react";
 import Modal from 'react-modal';
-import homophones from "../public/homophoneslist.json";
 import Header from './header';
 import Instructions from "./instructions";
 import GuessFeedback from "./guessFeedback";
+import { GameState, GameStateActionType, GameStateType } from "./models/gameState.model";
+import GameStateAction from "./models/gameStateAction.model";
+import { createInitialGameState, generateRandomWord} from "./util/util.function";
+
+  function reducer(state: GameState, action: GameStateAction): GameState {
+    switch (action.type) {
+      case GameStateActionType.GUESS: {
+        const guess = action.guess ?? "";
+        if (guess !== state.currentWord) {
+          return { ...state, currentGuess: guess, state: GameStateType.GAME_OVER };
+        }
+        return {
+          ...state,
+          currentGuess: guess,
+          correctWords: [...state.correctWords, guess],
+          state: GameStateType.WORD_COMPLETE,
+        };
+      }
+      case GameStateActionType.REPLAY: {
+        return createInitialGameState();
+      }
+
+      case GameStateActionType.NEXT_WORD: {
+        return {
+          ...state,
+          fileName: action.fileName,
+          currentWord: action.currentWord,
+          unseenWordList: action.unseenWordList,
+          state: GameStateType.PLAYING,
+        };
+      }
+
+      default:
+        return state;
+    }
+}
 
 export default function Home() {
 
-  const [correctWords, setCorrectWords] = useState<string[]>([]);
-  const [currentWord, setCurrentWord] = useState<string | undefined>("");
-  const [currentGuess, setCurrentGuess] = useState<string | undefined>(undefined);
-  const [fileName, setFileName] = useState<string | undefined>("");
+  const [state, dispatch] = useReducer(reducer, undefined, createInitialGameState);
   const [hiScore, setHiScore] = useState<number>();
 
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
-  const [gameOver, setGameOver] = useState<boolean>(false);
   const [clickedButton, setClickedButton] = useState<boolean>(false);
   const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const unseenWordList = useRef<Set<number>>(new Set(
-    Array.from({ length: homophones.length }, (_, i) => i + 1)
-  ));
   const clickedButtonRef = useRef<boolean>(false);
 
   const customStyles = {
@@ -55,18 +83,21 @@ export default function Home() {
   }, [hiScore]);
 
   useEffect(() => {
-    setCurrentWord(generateRandomWord());
     setHiScore(parseInt(localStorage.getItem('hiScore') ?? "0") || 0);
   }, []);
 
+  useEffect(() => {
+    setHiScore(state.correctWords.length)
+  }, [state.correctWords])
+
+
   const playAudio = useCallback(() => {
-    console.debug(fileName);
     if (!clickedButtonRef.current) {
       clickedButtonRef.current = true;
       setClickedButton(true);
     }
     setAudioPlaying(true);
-    const audio = new Audio(fileName);
+    const audio = new Audio(state.fileName);
 
     audio.addEventListener('ended', () => {
       setAudioPlaying(false);
@@ -74,26 +105,29 @@ export default function Home() {
     });
 
     audio.play();
-  }, [fileName, clickedButtonRef]);
+  }, [state.fileName, clickedButtonRef]);
 
   useEffect(() => {
     // prevent first autoplay of audio if button hasn't been pushed yet
-    if (fileName && clickedButtonRef.current) { 
+    if (state.fileName && clickedButtonRef.current) { 
       playAudio();
     }
-  }, [fileName, clickedButtonRef, playAudio]);
+  }, [state.fileName, clickedButtonRef, playAudio]);
 
-  function generateRandomWord(): string | undefined {
-    const indices = Array.from(unseenWordList.current);
-    const chosenWordIndex = indices[Math.floor(Math.random() * indices.length)];
-    
-    unseenWordList.current.delete(chosenWordIndex);
-
-    const chosenGroup = homophones.at(chosenWordIndex); // choose homophone group
-    setFileName("/" + chosenGroup?.join("_") + ".mp3");
-    const chosen = chosenGroup?.at(Math.floor(Math.random() * chosenGroup.length));
-    return chosen; // chose random word in group
+  useEffect(() => {
+    if (state.state === GameStateType.GAME_OVER) {
+      endGame();
+    }
+    if (state.state === GameStateType.WORD_COMPLETE) {
+    const { fileName, currentWord, unseenWordList } = generateRandomWord(state.unseenWordList);
+    dispatch({
+      type: GameStateActionType.NEXT_WORD,
+      fileName,
+      currentWord,
+      unseenWordList
+    });
   }
+  }, [state.state]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     // Prevent the browser from reloading the page
@@ -111,22 +145,10 @@ export default function Home() {
       return;
     }
 
-    setCurrentGuess(guess);
-
-    if (guessCorrect(guess)) {
-      setCorrectWords([...correctWords, guess]);
-      if (score() + 1 > (hiScore ?? 0)) {
-        setHiScore(score() + 1);
-      }
-      setCurrentWord(generateRandomWord());
-    } else {
-      // game over
-      endGame();
-    }
+    dispatch({ type: GameStateActionType.GUESS, guess: guess })
   }
 
   function endGame() {
-    setGameOver(true);
     setTimeout(() => {
       openPopup();
     }, 700)
@@ -134,19 +156,7 @@ export default function Home() {
 
   function replay() {
     closePopup();
-    setCorrectWords([]);
-    setGameOver(false);
-    setCurrentWord(generateRandomWord());
-    setCurrentGuess(undefined);
-    unseenWordList.current = new Set(Array.from({ length: homophones.length }, (_, i) => i + 1));
-  }
-
-  function score() {
-    return correctWords.length;
-  }
-
-  function guessCorrect(guess: string) {
-    return guess.toLowerCase() === currentWord;
+    dispatch({ type: GameStateActionType.REPLAY, guess: undefined })
   }
 
   return (
@@ -156,10 +166,10 @@ export default function Home() {
     
       <div className="pt-24">
         <Instructions buttonClicked={clickedButton}/>
+        {/* { state.currentWord } */}
+        <h2>SCORE: {state.correctWords.length}</h2>
 
-        <h2>SCORE: {correctWords.length}</h2>
-
-        <GuessFeedback currentGuess={currentGuess} currentWord={currentWord} gameOver={gameOver}/>
+        <GuessFeedback gameState={state}/>
 
         <div className="flex gap-x-1">
           <button className="flex items-center" onClick={playAudio} >
@@ -174,7 +184,7 @@ export default function Home() {
 
         <div id="word-list">
           <ol className="list-decimal">
-            { correctWords.map(correctWord => (
+            { state.correctWords.map(correctWord => (
                 <li key={correctWord}>{ correctWord }</li>
               ))
             }
@@ -191,7 +201,7 @@ export default function Home() {
         <h2>GAME OVER!</h2>
         <div className="flex flex-col gap-y-4">
           <div>
-            <p>score: { score() }</p>
+            <p>score: { state.correctWords.length }</p>
             <p>high score: { hiScore }</p>
           </div>
           <button className="submit" onClick={replay}>replay</button>
@@ -199,8 +209,9 @@ export default function Home() {
       </Modal>
 
       <div className="fixed left-0 bottom-0 w-full flex justify-center text-2xl pb-8">
-        high score: {hiScore}
+        high score: { hiScore }
       </div>
     </div>
   );
 }
+

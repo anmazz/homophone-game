@@ -1,21 +1,19 @@
-interface FeedbackProps {
-    currentGuess: string | undefined;
-    currentWord: string | undefined;
-    gameOver: boolean;
-}
+import { GameState, GameStateType } from "./models/gameState.model";
 
-export default function GuessFeedback({currentGuess, currentWord, gameOver} : FeedbackProps) {
+
+export default function GuessFeedback({ gameState } : { gameState: GameState}) {
     return (
         <div style={{ minHeight: '24px' }}>
-            {currentGuess && !gameOver && (
-            <div className="correct-guess" key={currentGuess}>
-                +1 {currentGuess}
+            { gameState.currentGuess && gameState.state !== GameStateType.GAME_OVER && (
+            <div className="correct-guess" key={gameState.currentGuess}>
+                +1 {gameState.currentGuess}
             </div>
             )}
 
-            {gameOver && (
-            <div className="game-over flex items-end" key={currentGuess}>
-                <span className="material-symbols-outlined small">close</span>correct word: {currentWord}
+          
+            { gameState.state === GameStateType.GAME_OVER && (
+                <div className="game-over flex items-end" key={gameState.currentGuess}>
+                <span className="material-symbols-outlined small">close</span>correct word: {gameState.currentWord}
             </div>
             )}
         </div>
