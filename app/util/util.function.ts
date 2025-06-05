@@ -5,32 +5,34 @@ export function generateRandomWord(wordList: string[][] | undefined): {
   fileName: string;
   currentWord: string | undefined;
   unseenWordList: string[][];
+  groupSize: number
 } {
   if (!wordList) {
     // shouldn't get here
-    return { fileName: "", currentWord: "", unseenWordList: [] }
+    return { fileName: "", currentWord: "", unseenWordList: [], groupSize: 0 }
   }
   const numWordGroups = wordList.length;
   const randomWordGroupIndex = Math.floor(Math.random() * numWordGroups);
   const chosenGroup = wordList[randomWordGroupIndex];
   wordList.splice(randomWordGroupIndex, 1);
   const fileName = "/" + chosenGroup.join("_") + ".mp3";
-  const currentWord = chosenGroup[Math.floor(Math.random() * chosenGroup.length)];
+  const groupSize = chosenGroup.length;
+  const currentWord = chosenGroup[Math.floor(Math.random() * groupSize)];
   
   console.debug(fileName)
-  return { fileName, currentWord, unseenWordList: wordList };
+  return { fileName, currentWord, unseenWordList: wordList, groupSize };
 }
 
 export function createInitialGameState(): GameState {
-  
-  const { fileName, currentWord, unseenWordList } = generateRandomWord(structuredClone(homophones));
-  console.log("initial game state")
+  console.debug("initial game state")
   return {
-    currentWord,
+    currentWord: undefined,
     correctWords: [],
-    fileName,
-    currentGuess: "",
-    unseenWordList,
-    state: GameStateType.PLAYING,
+    fileName: undefined,
+    currentGuess: undefined,
+    unseenWordList: structuredClone(homophones),
+    previousScoreAdded: 0,
+    state: GameStateType.NEW_GAME,
+    score: 0,
   };
 }

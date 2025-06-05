@@ -6,4 +6,5 @@ export default interface GameStateAction {
     fileName?: string;
     currentWord?: string | undefined;
     unseenWordList?: string[][];
+    groupSize?: number;
 }

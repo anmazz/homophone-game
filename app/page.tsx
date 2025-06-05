@@ -29,12 +29,18 @@ import { createInitialGameState, generateRandomWord} from "./util/util.function"
       }
 
       case GameStateActionType.NEXT_WORD: {
+        // after a correct entry has been submitted, and the currentWord/file needs to be updated
+        const scoreToAdd = (action.groupSize ?? 0) * (state.correctWords.length + 1);
+
+        
         return {
           ...state,
           fileName: action.fileName,
           currentWord: action.currentWord,
           unseenWordList: action.unseenWordList,
           state: GameStateType.PLAYING,
+          previousScoreAdded: scoreToAdd,
+          score: state.score + (state.previousScoreAdded ?? 0)
         };
       }
 
@@ -68,14 +74,6 @@ export default function Home() {
     },
   };
 
-  function openPopup() {
-    setGameOverModalOpen(true);
-  }
-
-  function closePopup() {
-    setGameOverModalOpen(false);
-  }
-
   useEffect(() => {
     if (hiScore !== undefined) { // don't set if hiScore hasn't been retrieved from localstorage yet
       localStorage.setItem('hiScore', JSON.stringify(hiScore ?? 0));
@@ -87,8 +85,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    setHiScore(state.correctWords.length)
-  }, [state.correctWords])
+    if (state.score > (hiScore ?? 0)) {
+      setHiScore(state.score)
+    }
+  }, [state.score])
 
 
   const playAudio = useCallback(() => {
@@ -97,6 +97,7 @@ export default function Home() {
       setClickedButton(true);
     }
     setAudioPlaying(true);
+    console.debug(state.fileName);
     const audio = new Audio(state.fileName);
 
     audio.addEventListener('ended', () => {
@@ -118,15 +119,28 @@ export default function Home() {
     if (state.state === GameStateType.GAME_OVER) {
       endGame();
     }
+    if (state.state === GameStateType.NEW_GAME) {
+      console.log("new game")
+      const { fileName, currentWord, unseenWordList, groupSize } = generateRandomWord(state.unseenWordList);
+      console.log(groupSize)
+      dispatch({
+        type: GameStateActionType.NEXT_WORD,
+        fileName,
+        currentWord,
+        unseenWordList,
+        groupSize
+      });
+    }
     if (state.state === GameStateType.WORD_COMPLETE) {
-    const { fileName, currentWord, unseenWordList } = generateRandomWord(state.unseenWordList);
-    dispatch({
-      type: GameStateActionType.NEXT_WORD,
-      fileName,
-      currentWord,
-      unseenWordList
-    });
-  }
+      const { fileName, currentWord, unseenWordList, groupSize } = generateRandomWord(state.unseenWordList);
+      dispatch({
+        type: GameStateActionType.NEXT_WORD,
+        fileName,
+        currentWord,
+        unseenWordList,
+        groupSize
+      });
+    }
   }, [state.state]);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -150,13 +164,17 @@ export default function Home() {
 
   function endGame() {
     setTimeout(() => {
-      openPopup();
+      setGameOverModalOpen(true);
     }, 700)
   }
 
   function replay() {
-    closePopup();
+    setGameOverModalOpen(false);
     dispatch({ type: GameStateActionType.REPLAY, guess: undefined })
+  }
+
+  function closePopup() {
+    setGameOverModalOpen(false);
   }
 
   return (
@@ -166,8 +184,8 @@ export default function Home() {
     
       <div className="pt-24">
         <Instructions buttonClicked={clickedButton}/>
-        {/* { state.currentWord } */}
-        <h2>SCORE: {state.correctWords.length}</h2>
+        { state.currentWord }
+        <h2>SCORE: {state.score }</h2>
 
         <GuessFeedback gameState={state}/>
 
@@ -201,7 +219,7 @@ export default function Home() {
         <h2>GAME OVER!</h2>
         <div className="flex flex-col gap-y-4">
           <div>
-            <p>score: { state.correctWords.length }</p>
+            <p>score: { state.score }</p>
             <p>high score: { hiScore }</p>
           </div>
           <button className="submit" onClick={replay}>replay</button>
