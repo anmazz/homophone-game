@@ -38,6 +38,7 @@ function reducer(state: GameState, action: GameStateAction): GameState {
         currentWord: action.currentWord,
         unseenWordList: action.unseenWordList,
         state: GameStateType.PLAYING,
+        prevWordScore: state.wordScore,
         wordScore: wordScore,
         totalScore: state.totalScore + (state.wordScore ?? 0)
       };

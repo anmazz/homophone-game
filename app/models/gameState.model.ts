@@ -5,6 +5,7 @@ export interface GameState {
   currentGuess: string | undefined;
   unseenWordList: string[][] | undefined;
   state: GameStateType;
+  prevWordScore: number;
   wordScore: number;
   totalScore: number;
 }

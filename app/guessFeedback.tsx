@@ -1,21 +1,13 @@
-import { useEffect, useState } from "react";
 import { GameState, GameStateType } from "./models/gameState.model";
 
 
 export default function GuessFeedback({ gameState }: { gameState: GameState }) {
-  const [prevWordScore, setPrevWordScore] = useState<number>(gameState.wordScore);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setPrevWordScore(gameState.wordScore);
-    }, 800)
-  }, [gameState.wordScore])
 
   return (
     <div style={{ minHeight: '24px' }}>
       {gameState.currentGuess && gameState.state !== GameStateType.GAME_OVER && (
         <div className="correct-guess" key={gameState.currentGuess}>
-          +{prevWordScore} {gameState.currentGuess}
+          +{gameState.prevWordScore} {gameState.currentGuess}
         </div>
       )}
       {gameState.state === GameStateType.GAME_OVER && (
