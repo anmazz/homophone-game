@@ -5,8 +5,8 @@ export interface GameState {
   currentGuess: string | undefined;
   unseenWordList: string[][] | undefined;
   state: GameStateType;
-  previousScoreAdded: number | undefined;
-  score: number;
+  wordScore: number;
+  totalScore: number;
 }
 
 export enum GameStateActionType {

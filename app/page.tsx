@@ -1,58 +1,58 @@
 'use client'
 
+import { createInitialGameState, generateRandomWord} from "./util/util.function";
 import { FormEvent, useCallback, useEffect, useReducer, useRef, useState } from "react";
-import React from "react";
-import Modal from 'react-modal';
-import Header from './header';
-import Instructions from "./instructions";
-import GuessFeedback from "./guessFeedback";
 import { GameState, GameStateActionType, GameStateType } from "./models/gameState.model";
 import GameStateAction from "./models/gameStateAction.model";
-import { createInitialGameState, generateRandomWord} from "./util/util.function";
+import GuessFeedback from "./guessFeedback";
+import Header from './header';
+import Instructions from "./instructions";
+import Modal from 'react-modal';
+import React from "react";
 
-  function reducer(state: GameState, action: GameStateAction): GameState {
-    switch (action.type) {
-      case GameStateActionType.GUESS: {
-        const guess = action.guess ?? "";
-        if (guess !== state.currentWord) {
-          return { ...state, currentGuess: guess, state: GameStateType.GAME_OVER };
-        }
-        return {
-          ...state,
-          currentGuess: guess,
-          correctWords: [...state.correctWords, guess],
-          state: GameStateType.WORD_COMPLETE,
-        };
+function reducer(state: GameState, action: GameStateAction): GameState {
+  switch (action.type) {
+    case GameStateActionType.GUESS: {
+      const guess = action.guess ?? "";
+      if (guess !== state.currentWord) {
+        return { ...state, currentGuess: guess, state: GameStateType.GAME_OVER };
       }
-      case GameStateActionType.REPLAY: {
-        return createInitialGameState();
-      }
-
-      case GameStateActionType.NEXT_WORD: {
-        // after a correct entry has been submitted, and the currentWord/file needs to be updated
-        const scoreToAdd = (action.groupSize ?? 0) * (state.correctWords.length + 1);
-
-        
-        return {
-          ...state,
-          fileName: action.fileName,
-          currentWord: action.currentWord,
-          unseenWordList: action.unseenWordList,
-          state: GameStateType.PLAYING,
-          previousScoreAdded: scoreToAdd,
-          score: state.score + (state.previousScoreAdded ?? 0)
-        };
-      }
-
-      default:
-        return state;
+      return {
+        ...state,
+        currentGuess: guess,
+        correctWords: [...state.correctWords, guess],
+        state: GameStateType.WORD_COMPLETE,
+      };
     }
+    case GameStateActionType.REPLAY: {
+      return createInitialGameState();
+    }
+
+    case GameStateActionType.NEXT_WORD: {
+      // after a correct entry has been submitted, and the currentWord/file needs to be updated
+      const wordScore = (action.groupSize ?? 0) * (state.correctWords.length + 1);
+
+      return {
+        ...state,
+        fileName: action.fileName,
+        currentWord: action.currentWord,
+        unseenWordList: action.unseenWordList,
+        state: GameStateType.PLAYING,
+        wordScore: wordScore,
+        totalScore: state.totalScore + (state.wordScore ?? 0)
+      };
+    }
+
+    default:
+      return state;
+  }
 }
 
 export default function Home() {
 
   const [state, dispatch] = useReducer(reducer, undefined, createInitialGameState);
   const [hiScore, setHiScore] = useState<number>();
+  
 
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [clickedButton, setClickedButton] = useState<boolean>(false);
@@ -75,21 +75,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (hiScore !== undefined) { // don't set if hiScore hasn't been retrieved from localstorage yet
-      localStorage.setItem('hiScore', JSON.stringify(hiScore ?? 0));
-    }
-  }, [hiScore]);
-
-  useEffect(() => {
     setHiScore(parseInt(localStorage.getItem('hiScore') ?? "0") || 0);
   }, []);
 
   useEffect(() => {
-    if (state.score > (hiScore ?? 0)) {
-      setHiScore(state.score)
+    if (state.totalScore > (hiScore ?? 0)) {
+      setHiScore(state.totalScore)
+      localStorage.setItem('hiScore', JSON.stringify(state.totalScore ?? 0));
     }
-  }, [state.score])
-
+  }, [state.totalScore])
 
   const playAudio = useCallback(() => {
     if (!clickedButtonRef.current) {
@@ -102,6 +96,7 @@ export default function Home() {
 
     audio.addEventListener('ended', () => {
       setAudioPlaying(false);
+      // move focus back to input box
       inputRef?.current?.focus();
     });
 
@@ -119,19 +114,7 @@ export default function Home() {
     if (state.state === GameStateType.GAME_OVER) {
       endGame();
     }
-    if (state.state === GameStateType.NEW_GAME) {
-      console.log("new game")
-      const { fileName, currentWord, unseenWordList, groupSize } = generateRandomWord(state.unseenWordList);
-      console.log(groupSize)
-      dispatch({
-        type: GameStateActionType.NEXT_WORD,
-        fileName,
-        currentWord,
-        unseenWordList,
-        groupSize
-      });
-    }
-    if (state.state === GameStateType.WORD_COMPLETE) {
+    if (state.state === GameStateType.WORD_COMPLETE || state.state === GameStateType.NEW_GAME) {
       const { fileName, currentWord, unseenWordList, groupSize } = generateRandomWord(state.unseenWordList);
       dispatch({
         type: GameStateActionType.NEXT_WORD,
@@ -184,8 +167,7 @@ export default function Home() {
     
       <div className="pt-24">
         <Instructions buttonClicked={clickedButton}/>
-        { state.currentWord }
-        <h2>SCORE: {state.score }</h2>
+        <h2>SCORE: {state.totalScore }</h2>
 
         <GuessFeedback gameState={state}/>
 
@@ -219,7 +201,7 @@ export default function Home() {
         <h2>GAME OVER!</h2>
         <div className="flex flex-col gap-y-4">
           <div>
-            <p>score: { state.score }</p>
+            <p>score: { state.totalScore }</p>
             <p>high score: { hiScore }</p>
           </div>
           <button className="submit" onClick={replay}>replay</button>

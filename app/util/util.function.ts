@@ -19,7 +19,6 @@ export function generateRandomWord(wordList: string[][] | undefined): {
   const groupSize = chosenGroup.length;
   const currentWord = chosenGroup[Math.floor(Math.random() * groupSize)];
   
-  console.debug(fileName)
   return { fileName, currentWord, unseenWordList: wordList, groupSize };
 }
 
@@ -31,8 +30,8 @@ export function createInitialGameState(): GameState {
     fileName: undefined,
     currentGuess: undefined,
     unseenWordList: structuredClone(homophones),
-    previousScoreAdded: 0,
     state: GameStateType.NEW_GAME,
-    score: 0,
+    wordScore: 0,
+    totalScore: 0,
   };
 }
