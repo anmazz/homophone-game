@@ -1,23 +1,28 @@
-interface FeedbackProps {
-    currentGuess: string | undefined;
-    currentWord: string | undefined;
-    gameOver: boolean;
-}
+import { useEffect, useState } from "react";
+import { GameState, GameStateType } from "./models/gameState.model";
 
-export default function GuessFeedback({currentGuess, currentWord, gameOver} : FeedbackProps) {
-    return (
-        <div style={{ minHeight: '24px' }}>
-            {currentGuess && !gameOver && (
-            <div className="correct-guess" key={currentGuess}>
-                +1 {currentGuess}
-            </div>
-            )}
 
-            {gameOver && (
-            <div className="game-over flex items-end" key={currentGuess}>
-                <span className="material-symbols-outlined small">close</span>correct word: {currentWord}
-            </div>
-            )}
+export default function GuessFeedback({ gameState }: { gameState: GameState }) {
+  const [prevWordScore, setPrevWordScore] = useState<number>(gameState.wordScore);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setPrevWordScore(gameState.wordScore);
+    }, 800)
+  }, [gameState.wordScore])
+
+  return (
+    <div style={{ minHeight: '24px' }}>
+      {gameState.currentGuess && gameState.state !== GameStateType.GAME_OVER && (
+        <div className="correct-guess" key={gameState.currentGuess}>
+          +{prevWordScore} {gameState.currentGuess}
         </div>
-    )
+      )}
+      {gameState.state === GameStateType.GAME_OVER && (
+        <div className="game-over flex items-end" key={gameState.currentGuess}>
+          <span className="material-symbols-outlined small">close</span>correct word: {gameState.currentWord}
+        </div>
+      )}
+    </div>
+  )
 }
