@@ -2,59 +2,18 @@
 
 import { createInitialGameState, generateRandomWord} from "./util/util.function";
 import { FormEvent, useCallback, useEffect, useReducer, useRef, useState } from "react";
-import { GameState, GameStateActionType, GameStateType } from "./models/gameState.model";
-import GameStateAction from "./models/gameStateAction.model";
+import { GameStateActionType, GameStateType } from "./models/gameState.model";
 import GuessFeedback from "./guessFeedback";
 import Header from './header';
 import Instructions from "./instructions";
 import Modal from 'react-modal';
 import React from "react";
-
-function reducer(state: GameState, action: GameStateAction): GameState {
-  switch (action.type) {
-    case GameStateActionType.GUESS: {
-      const guess = action.guess ?? "";
-      if (guess !== state.currentWord) {
-        return { ...state, currentGuess: guess, state: GameStateType.GAME_OVER };
-      }
-      return {
-        ...state,
-        currentGuess: guess,
-        correctWords: [...state.correctWords, guess],
-        state: GameStateType.WORD_COMPLETE,
-      };
-    }
-    case GameStateActionType.REPLAY: {
-      return createInitialGameState();
-    }
-
-    case GameStateActionType.NEXT_WORD: {
-      // after a correct entry has been submitted, and the currentWord/file needs to be updated
-      const wordScore = (action.groupSize ?? 0) * (state.correctWords.length + 1);
-
-      return {
-        ...state,
-        fileName: action.fileName,
-        currentWord: action.currentWord,
-        unseenWordList: action.unseenWordList,
-        state: GameStateType.PLAYING,
-        prevWordScore: state.wordScore,
-        wordScore: wordScore,
-        totalScore: state.totalScore + (state.wordScore ?? 0)
-      };
-    }
-
-    default:
-      return state;
-  }
-}
+import { reducer } from "./util/gameState.function";
 
 export default function Home() {
 
   const [state, dispatch] = useReducer(reducer, undefined, createInitialGameState);
   const [hiScore, setHiScore] = useState<number>();
-  
-
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [clickedButton, setClickedButton] = useState<boolean>(false);
   const [gameOverModalOpen, setGameOverModalOpen] = useState<boolean>(false);

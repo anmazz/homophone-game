@@ -31,6 +31,7 @@ export function createInitialGameState(): GameState {
     currentGuess: undefined,
     unseenWordList: structuredClone(homophones),
     state: GameStateType.NEW_GAME,
+    prevWordScore: 0,
     wordScore: 0,
     totalScore: 0,
   };
