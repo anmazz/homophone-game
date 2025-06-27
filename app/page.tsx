@@ -3,12 +3,14 @@
 import { createInitialGameState, generateRandomWord} from "./util/util.function";
 import { FormEvent, useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { GameStateActionType, GameStateType } from "./models/gameState.model";
-import GuessFeedback from "./guessFeedback";
-import Header from './header';
-import Instructions from "./instructions";
-import Modal from 'react-modal';
-import React from "react";
 import { reducer } from "./util/gameState.function";
+import GameOverModal from "./components/gameOverModal";
+import GuessFeedback from "./components/guessFeedback";
+import GuessInput from "./components/guessInput";
+import Header from './components/header';
+import Instructions from "./components/instructions";
+import React from "react";
+import WordList from "./components/wordList";
 
 export default function Home() {
 
@@ -20,19 +22,6 @@ export default function Home() {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const clickedButtonRef = useRef<boolean>(false);
-
-  const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-    backgroundColor: 'black',
-    color: 'white'
-    },
-  };
 
   useEffect(() => {
     setHiScore(parseInt(localStorage.getItem('hiScore') ?? "0") || 0);
@@ -131,42 +120,23 @@ export default function Home() {
 
         <GuessFeedback gameState={state}/>
 
-        <div className="flex gap-x-1">
-          <button className="flex items-center" onClick={playAudio} >
-            <span className="material-symbols-outlined text-9xl">{audioPlaying ? 'volume_up' : 'play_circle'}</span>
-          </button>
-        
-          <form action="post" onSubmit={handleSubmit} className="flex gap-x-1">
-            <input name="guess" ref={inputRef} autoFocus/>
-            <button type="submit" className="submit">submit</button>
-          </form>
-        </div>
+        <GuessInput
+          inputRef={inputRef}
+          onSubmit={handleSubmit}
+          onPlayAudio={playAudio}
+          audioPlaying={audioPlaying}
+        />
 
-        <div id="word-list">
-          <ol className="list-decimal">
-            { state.correctWords.map(correctWord => (
-                <li key={correctWord}>{ correctWord }</li>
-              ))
-            }
-          </ol>
-        </div>
+        <WordList correctWords={state.correctWords}/>
       </div>
 
-      <Modal
-        ariaHideApp={false}
+      <GameOverModal
         isOpen={gameOverModalOpen}
         onRequestClose={closePopup}
-        style={customStyles}
-        contentLabel="Game over modal">
-        <h2>GAME OVER!</h2>
-        <div className="flex flex-col gap-y-4">
-          <div>
-            <p>score: { state.totalScore }</p>
-            <p>high score: { hiScore }</p>
-          </div>
-          <button className="submit" onClick={replay}>replay</button>
-        </div>
-      </Modal>
+        score={state.totalScore}
+        hiScore={hiScore}
+        onReplay={replay}
+      />
 
       <div className="fixed left-0 bottom-0 w-full flex justify-center text-2xl pb-8">
         high score: { hiScore }

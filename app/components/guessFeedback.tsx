@@ -1,5 +1,4 @@
-import { GameState, GameStateType } from "./models/gameState.model";
-
+import { GameState, GameStateType } from "../models/gameState.model";
 
 export default function GuessFeedback({ gameState }: { gameState: GameState }) {
 
