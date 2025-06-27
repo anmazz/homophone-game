@@ -22,7 +22,31 @@ const customStyles = {
   },
 };
 
+
+
 export default function GameOverModal({isOpen, score, hiScore, onReplay, onRequestClose}: GameOverModalProps) {
+  async function onShare() {
+  let shareData = {
+    title: `🔊 I scored ${score} points in the Homophone Game!`,
+    url: "https://homophonegame.com"
+  }
+  if (navigator.share) {
+    try {
+      await navigator.share(shareData);
+    } catch (err) {
+      console.log("Sharing failed", err);
+    }
+  } else {
+    try {
+      await navigator.clipboard.writeText(`${shareData.title} ${shareData.url}`);
+      alert("Link copied to clipboard!");
+    } catch (err) {
+      console.error("Clipboard copy failed:", err);
+      alert("Could not copy to clipboard.");
+    }
+  }
+}
+  
   return (
     <Modal
       ariaHideApp={false}
@@ -38,6 +62,12 @@ export default function GameOverModal({isOpen, score, hiScore, onReplay, onReque
           <p>high score: {hiScore}</p>
         </div>
         <button className="submit" onClick={onReplay}>replay</button>
+        <button className="submit flex justify-center" onClick={onShare}>
+          share &nbsp;
+          <span className="material-symbols-outlined small">
+          share
+        </span>
+        </button>
       </div>
     </Modal>
   );
