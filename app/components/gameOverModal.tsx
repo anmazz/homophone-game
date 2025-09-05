@@ -26,7 +26,7 @@ const customStyles = {
 
 export default function GameOverModal({isOpen, score, hiScore, onReplay, onRequestClose}: GameOverModalProps) {
   async function onShare() {
-  let shareData = {
+  const shareData = {
     title: `🔊 I scored ${score} points in the Homophone Game!`,
     url: "https://homophonegame.com"
   }

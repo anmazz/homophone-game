@@ -5,7 +5,7 @@ import { createInitialGameState } from "./util.function";
 export function reducer(state: GameState, action: GameStateAction): GameState {
   switch (action.type) {
     case GameStateActionType.GUESS: {
-      const guess = action.guess ?? "";
+      const guess = (action.guess ?? "").toLowerCase();
       if (guess !== state.currentWord) {
         return { ...state, currentGuess: guess, state: GameStateType.GAME_OVER };
       }

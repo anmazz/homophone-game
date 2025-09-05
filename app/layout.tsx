@@ -13,6 +13,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta property="og:title" content="Homophone Game!"/>
+        <link rel="icon" href="/favicon.ico"/>
+      </head>
       <body className="flex-1">
         {children}
       </body>
