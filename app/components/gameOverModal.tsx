@@ -22,8 +22,6 @@ const customStyles = {
   },
 };
 
-
-
 export default function GameOverModal({isOpen, score, hiScore, onReplay, onRequestClose}: GameOverModalProps) {
   async function onShare() {
   const shareData = {
@@ -54,6 +52,7 @@ export default function GameOverModal({isOpen, score, hiScore, onReplay, onReque
       onRequestClose={onRequestClose}
       style={customStyles}
       contentLabel="Game Over Modal"
+      shouldCloseOnOverlayClick={false}
     >
       <h2>GAME OVER!</h2>
       <div className="flex flex-col gap-y-4">
